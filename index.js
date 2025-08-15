@@ -17,25 +17,28 @@ csv()
     allowedFoodData = jsonObj;
     console.log("Allowed food CSV loaded");
   })
-  .catch(err => console.error("CSV load error:", err));
+  .catch((err) => console.error("CSV load error:", err));
 
 // POST /getAllowedFood
 app.post("/getAllowedFood", (req, res) => {
-  // 카카오 챗봇에서 보내는 POST body 구조에 맞춰 week 값 추출
-  const week =
+  // week 문자열 추출 (예: "1주차")
+  const weekStr =
     req.body?.action?.params?.week ||
     req.body?.action?.detailParams?.week?.value;
 
-  if (!week || week < 1 || week > 4) {
-    return res.status(400).json({ error: "week parameter must be 1~4" });
+  if (!weekStr) {
+    return res.status(400).json({ error: "week parameter is required" });
   }
 
+  // CSV에서 문자열로 매칭
   const weekData = allowedFoodData.find(
-    (item) => parseInt(item.week) === parseInt(week)
+    (item) => item.week === weekStr.toString()
   );
 
   if (!weekData) {
-    return res.status(404).json({ error: "Data not found for this week" });
+    return res
+      .status(404)
+      .json({ error: `Data not found for week ${weekStr}` });
   }
 
   // CSV의 food 컬럼에서 값 가져오기
@@ -48,7 +51,7 @@ app.post("/getAllowedFood", (req, res) => {
       outputs: [
         {
           simpleText: {
-            text: `${week}주차 허용식품: ${foodList}`,
+            text: `${weekStr} 허용식품: ${foodList}`,
           },
         },
       ],
@@ -58,9 +61,11 @@ app.post("/getAllowedFood", (req, res) => {
   res.json(responseJSON);
 });
 
-// 루트 접근시 간단 안내
+// 루트 접근시 안내
 app.get("/", (req, res) => {
-  res.send("Diet Tracker API is running. POST /getAllowedFood with JSON body.");
+  res.send(
+    "Diet Tracker API is running. POST /getAllowedFood with JSON body."
+  );
 });
 
 // 서버 시작
