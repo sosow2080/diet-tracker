@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 let allowedFoodData = [];
-let foodByDate = [];
+let foodByDateData = [];
 
 // allowed_food.csv 로딩
 csv()
@@ -20,9 +20,9 @@ csv()
   })
   .catch(err => console.error("Allowed food CSV load error:", err));
 
-// food_by_date.csv 로딩
+// food_by_day.csv 로딩
 csv()
-  .fromFile(path.join(__dirname, "food_by_date.csv"))
+  .fromFile(path.join(__dirname, "food_by_day.csv"))
   .then((jsonObj) => {
     foodByDateData = jsonObj;
     console.log("Food by date CSV loaded");
@@ -72,55 +72,28 @@ app.post("/getAllowedFood", (req, res) => {
 });
 
 
-// POST /getCurrentDayFood
-app.post("/getCurrentDayFood", (req, res) => {
-  const now = new Date();
+// POST /getDayFood
+app.post("/getDayFood", (req, res) => {
+  const dayNum = req.body?.action?.params?.day || req.body?.action?.detailParams?.day?.value;
+  if (!dayNum) return res.status(400).json({ error: "day parameter is required" });
 
-  // day 결정: 4번째 시간 +4h 기준
-  const days = [...new Set(foodByDate.map(d => parseInt(d.day)))].sort((a, b) => a - b);
-  let currentDay = days[0];
+  const dayData = foodByDateData
+    .filter(d => parseInt(d.day) === parseInt(dayNum))
+    .slice(0, 4) // 행 순서대로 4개
+    .map(d => ({
+      ...d,
+      what: d.what.trim()
+    }));
 
-  for (let i = 0; i < days.length; i++) {
-    const dayNum = days[i];
-    const dayData = foodByDate
-      .filter(d => parseInt(d.day) === dayNum)
-      .sort((a, b) => a.time.localeCompare(b.time));
+  if (dayData.length === 0) return res.status(404).json({ error: `No food data for day ${dayNum}` });
 
-    const fourthTime = dayData[3].time; // 4번째 시간
-    const [hh, mm] = fourthTime.split(":").map(Number);
-    const fourthDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm);
-    fourthDateTime.setHours(fourthDateTime.getHours() + 4);
+  const lines = dayData.map(d => `- ${d.date} ${d.time}에 ${d.what}`);
+  const responseText = `${dayNum}일차 식단은 다음과 같아요!\n\n${lines.join("\n")}`;
 
-    if (now < fourthDateTime) {
-      currentDay = dayNum;
-      break;
-    }
-    currentDay = dayNum + 1;
-  }
-
-  // 해당 day 데이터 가져오기
-  const dayData = foodByDate
-    .filter(d => parseInt(d.day) === currentDay)
-    .sort((a, b) => a.time.localeCompare(b.time));
-
-  const lines = dayData.map(item => `${item.time} - ${item.what}`);
-  const responseText = `${currentDay}일차 식단:\n` + lines.join("\n");
-
-  // 카카오 챗봇 JSON 포맷으로 응답
-  const responseJSON = {
+  res.json({
     version: "2.0",
-    template: {
-      outputs: [
-        {
-          simpleText: {
-            text: responseText
-          }
-        }
-      ]
-    }
-  };
-
-  res.json(responseJSON);
+    template: { outputs: [{ simpleText: { text: responseText } }] }
+  });
 });
 
 
