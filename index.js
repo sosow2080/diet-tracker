@@ -108,7 +108,11 @@ app.post("/getProgress", (req, res) => {
   const totalDays = endDate.diff(startDate, "day") + 1;
   const progressPercent = ((dayNum / totalDays) * 100).toFixed(1);
 
-  const message = `오늘은 ${today.format("MM월 DD일")}이야.\n${dayNum}일차임!\n진행도: ${progressPercent}%`;
+    // 남은 일수 (D-값)
+  const daysLeft = finalDate.diff(today, "day");
+
+  // 메시지
+  const message = `오늘은 ${today.format("MM월 DD일")}이야.\n${dayNum}일차임!\n진행도: ${progressPercent}%\nD-${daysLeft}일`;
 
   res.json({
     version: "2.0",
