@@ -1,9 +1,11 @@
 const express = require("express");
 const csv = require("csvtojson");
 const path = require("path");
+const dayjs = require("dayjs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 
 // JSON Body 파싱
 app.use(express.json());
@@ -93,6 +95,32 @@ app.post("/getDayFood", (req, res) => {
   res.json({
     version: "2.0",
     template: { outputs: [{ simpleText: { text: responseText } }] }
+  });
+});
+
+
+app.post("/getProgress", (req, res) => {
+  const startDate = dayjs("2025-08-14");
+  const endDate = dayjs("2025-09-18");
+  const today = dayjs();
+
+  const dayNum = today.diff(startDate, "day") + 1; // 1일차부터 시작
+  const totalDays = endDate.diff(startDate, "day") + 1;
+  const progressPercent = ((dayNum / totalDays) * 100).toFixed(1);
+
+  const message = `오늘은 ${today.format("MM월 DD일")}이야.\n${dayNum}일차임!\n진행도: ${progressPercent}%`;
+
+  res.json({
+    version: "2.0",
+    template: {
+      outputs: [
+        {
+          simpleText: {
+            text: message
+          }
+        }
+      ]
+    }
   });
 });
 
