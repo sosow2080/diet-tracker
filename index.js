@@ -101,15 +101,15 @@ app.post("/getDayFood", (req, res) => {
 
 app.post("/getProgress", (req, res) => {
   const startDate = dayjs("2025-08-14");
-  const endDate = dayjs("2025-09-18");
+  const endDate = dayjs("2025-09-18"); // 최종 날짜
   const today = dayjs();
 
   const dayNum = today.diff(startDate, "day") + 1; // 1일차부터 시작
   const totalDays = endDate.diff(startDate, "day") + 1;
   const progressPercent = ((dayNum / totalDays) * 100).toFixed(1);
 
-    // 남은 일수 (D-값)
-  const daysLeft = finalDate.diff(today, "day");
+  // 남은 일수 (D-값)
+  const daysLeft = endDate.diff(today, "day");
 
   // 메시지
   const message = `오늘은 ${today.format("MM월 DD일")}이야.\n${dayNum}일차임!\n진행도: ${progressPercent}%\nD-${daysLeft}일`;
@@ -126,7 +126,7 @@ app.post("/getProgress", (req, res) => {
       ]
     }
   });
-});
+})
 
 
 // 루트 접근시 간단 안내
