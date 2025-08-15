@@ -88,7 +88,7 @@ app.post("/getDayFood", (req, res) => {
   if (dayData.length === 0) return res.status(404).json({ error: `No food data for day ${dayNum}` });
 
   const lines = dayData.map(d => `- ${d.date} ${d.time}에 ${d.what}`);
-  const responseText = `${dayNum}일차 식단은 다음과 같아요!\n\n${lines.join("\n")}`;
+  const responseText = `${dayNum} 식단은 다음과 같아요!\n\n${lines.join("\n")}`;
 
   res.json({
     version: "2.0",
