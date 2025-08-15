@@ -51,7 +51,7 @@ app.post("/getAllowedFood", (req, res) => {
       outputs: [
         {
           simpleText: {
-            text: `${weekStr} 허용식품은\n ${foodList}`,
+            text: `${weekStr} 허용 식품은\n\n ${foodList}`,
           },
         },
       ],
