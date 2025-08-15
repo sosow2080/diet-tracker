@@ -2,6 +2,11 @@ const express = require("express");
 const csv = require("csvtojson");
 const path = require("path");
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -100,16 +105,18 @@ app.post("/getDayFood", (req, res) => {
 
 
 app.post("/getProgress", (req, res) => {
-  const startDate = dayjs("2025-08-14");
-  const endDate = dayjs("2025-09-18"); // 최종 날짜
-  const today = dayjs();
+  // 시작일과 종료일 설정
+  const startDate = dayjs.tz("2025-08-14", "Asia/Seoul");
+  const endDate = dayjs.tz("2025-09-18", "Asia/Seoul");
+  const today = dayjs().tz("Asia/Seoul");
 
-  const dayNum = today.diff(startDate, "day") + 1; // 1일차부터 시작
+  // 오늘이 시작일 이전이면 0일차로 처리
+  const dayNum = today.isBefore(startDate) ? 0 : today.diff(startDate, "day") + 1;
   const totalDays = endDate.diff(startDate, "day") + 1;
   const progressPercent = ((dayNum / totalDays) * 100).toFixed(1);
 
-  // 남은 일수 (D-값)
-  const daysLeft = endDate.diff(today, "day");
+  // 남은 일수(D-)
+  const daysLeft = today.isAfter(endDate) ? 0 : endDate.diff(today, "day");
 
   // 메시지
   const message = `오늘은 ${today.format("MM월 DD일")}이야.\n${dayNum}일차임!\n진행도: ${progressPercent}%\nD-${daysLeft}일`;
@@ -126,7 +133,8 @@ app.post("/getProgress", (req, res) => {
       ]
     }
   });
-})
+});
+
 
 
 // 루트 접근시 간단 안내
